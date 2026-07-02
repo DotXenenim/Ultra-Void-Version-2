@@ -8,11 +8,11 @@ class User
     public string $first_name;
     public string $middle_name;
     public string $last_name;
-    public int $date_of_birth;
+    public string $date_of_birth;
     public bool $is_eu_citizen;
-    public bool $will_work;
+    public bool $is_working;
     public string $housing_type;
     public string $program_type;
-    public int $created_at;
-    public int $updated_at;
+    public ?string $created_at;
+    public ?string $updated_at;
 }

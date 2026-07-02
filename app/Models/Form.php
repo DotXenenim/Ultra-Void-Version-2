@@ -8,5 +8,7 @@ class Form
 
     public int $user_id;
 
+    public ?string $submitted_at;
+
 
 }
