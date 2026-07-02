@@ -11,12 +11,10 @@ use Framework\ResponseFactory;
 class HomeController
 {
     private ResponseFactory $responseFactory;
-    private AuthService $authService;
     public function __construct(
         ResponseFactory $responseFactory,
-        AuthService $authService) {
+        ) {
         $this->responseFactory = $responseFactory;
-        $this->authService = $authService;
     }
 
     public function index(): Response

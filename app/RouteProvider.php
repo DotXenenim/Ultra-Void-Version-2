@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Controllers\HomeController;
 use App\Middlewares\AuthMiddleware;
 use Framework\Router;
 use Framework\RouteProviderInterface;
@@ -14,7 +15,6 @@ class RouteProvider implements RouteProviderInterface
      */
     public function register(Router $router, ServiceContainer $container): void
     {
-        $authMiddleware = $container->get(AuthMiddleware::class);
 
         $homeController = $container->get(HomeController::class);
         $router->addRoute('GET', '/', [$homeController, 'index']);
