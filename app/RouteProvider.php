@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Controllers\HomeController;
 use App\Middlewares\AuthMiddleware;
 use Framework\Router;
 use Framework\RouteProviderInterface;

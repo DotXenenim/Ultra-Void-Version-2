@@ -5,13 +5,28 @@ if (!file_exists(__DIR__ . '/vendor/autoload.php')) {
     die('You must run composer install');
 }
 
+require __DIR__ . '/vendor/autoload.php';
+
 if ($argv[1] === 'migrate') {
-    require 'vendor/autoload.php';
+    $host = getenv('DB_HOST') ?: '127.0.0.1';
+    $port = getenv('DB_PORT') ?: '3306';
+    $name = getenv('DB_NAME') ?: 'app_db';
+    $user = getenv('DB_USER') ?: 'root';
+    $pass = getenv('DB_PASSWORD') ?: 'secret';
+
+    // Bootstrap: create the database if it doesn't exist yet (no dbname in DSN here)
+    $bootstrap = new \PDO("mysql:host=$host;port=$port", $user, $pass);
+    $bootstrap->exec("CREATE DATABASE IF NOT EXISTS `$name`");
+    $bootstrap = null;
 
     $config = array(
         'APP_ENV' => 'development',
         'VIEWS_PATH' => 'app/views',
-        'APP_DB' => 'database.sqlite'
+        'DB_HOST' => $host,
+        'DB_PORT' => $port,
+        'DB_NAME' => $name,
+        'DB_USER' => $user,
+        'DB_PASSWORD' => $pass,
     );
 
     $kernel = new \Framework\Kernel($config);

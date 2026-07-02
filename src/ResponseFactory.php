@@ -12,7 +12,7 @@ class ResponseFactory
 
     public function __construct(bool $debugMode, string $viewsPath)
     {
-        $loader = new \Twig\Loader\FilesystemLoader(__DIR__ . '/../' . $viewsPath);
+        $loader = new \Twig\Loader\FilesystemLoader($viewsPath);
         $twig = new \Twig\Environment($loader, [
             'debug' => $debugMode
         ]);

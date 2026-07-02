@@ -25,8 +25,13 @@ class Kernel
         $responseFactory = new ResponseFactory($debugMode, $viewsPath);
         $this->container->set(ResponseFactory::class, $responseFactory);
 
-        $dbName = $this->configManager->get('APP_DB');
-        $database = new Database(__DIR__ . '/../' . $dbName);
+        $database = new Database(
+            $this->configManager->get('DB_HOST'),
+            $this->configManager->get('DB_NAME'),
+            $this->configManager->get('DB_USER'),
+            $this->configManager->get('DB_PASSWORD'),
+            $this->configManager->get('DB_PORT')
+        );
         $this->container->set(Database::class, $database);
 
         $this->router = new Router($responseFactory);

@@ -9,12 +9,19 @@ class Database
 {
     private PDO $connection;
 
-    public function __construct(string $name)
-    {
-        $this->connection = new PDO("sqlite:" . $name);
+    public function __construct(
+        string $host,
+        string $dbname,
+        string $username,
+        string $password,
+        string $port = '3306',
+        string $charset = 'utf8mb4'
+    ) {
+        $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset={$charset}";
+
+        $this->connection = new PDO($dsn, $username, $password);
         $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $this->connection->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ);
-        $this->connection->exec('PRAGMA foreign_keys = ON;');
     }
 
     public function query(string $query): PDOStatement | false
@@ -55,6 +62,7 @@ class Database
         if ($files === false) {
             die('Could not read database migration files');
         }
+        sort($files, SORT_NATURAL);
         foreach ($files as $file) {
             if ($file === '.' || $file === '..') {
                 continue;

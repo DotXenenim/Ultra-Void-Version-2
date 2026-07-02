@@ -12,52 +12,19 @@ use Framework\ResponseFactory;
 class AuthMiddleware
 {
     private ResponseFactory $responseFactory;
-    private AuthService $authService;
+    //private AuthService $authService;
 
     public function __construct(
         ResponseFactory $responseFactory,
-        AuthService $authService,
+        //AuthService $authService,
     ) {
         $this->responseFactory = $responseFactory;
-        $this->authService = $authService;
-    }
-
-    public function requireAssignedUser(Request $request, callable $next): Response
-    {
-      $projectId = $request->get('id') ?? $request->get('projectId');
-
-      if(!$projectId){
-          return $this->responseFactory->notFound();
-      }
-
-      $user = $request->session->getAttribute(User::class);
-      if(!$user){
-          return $this->responseFactory->forbidden();
-      }
-      if(!$this->authService->isLeadAssignedToProject($user, $projectId) && $user->role !== 'Superuser' && $user->role !== 'Project Manager'){
-          return $this->responseFactory->forbidden();
-      }
-      return $next($request);
+        //$this->authService = $authService;
     }
 
     public function requireAdmin(Request $request, callable $next): Response
     {
         return $this->requireRole($request, $next, 'Admin');
-    }
-
-    public function requireSuperUser(Request $request, callable $next): Response
-    {
-        return $this->requireRole($request, $next, 'Superuser');
-    }
-
-    public function requireProjectLead(Request $request, callable $next): Response
-    {
-        return $this->requireRole($request, $next, 'Project Lead');
-    }
-
-    public function requireProjectManager(Request $request, callable $next): Response
-    {
-        return $this->requireRole($request, $next, 'Project Manager');
     }
 
     public function requireUser(Request $request, callable $next): Response

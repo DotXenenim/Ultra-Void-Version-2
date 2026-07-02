@@ -10,8 +10,12 @@ use Framework\Request;
 
 $config = array(
     'APP_ENV' => 'development',
-    'VIEWS_PATH' => 'app/views',
-    'APP_DB' => 'database.sqlite'
+    'VIEWS_PATH' => __DIR__ . '/../app/views',
+    'DB_HOST' => getenv('DB_HOST') ?: '127.0.0.1',
+    'DB_PORT' => getenv('DB_PORT') ?: '3306',
+    'DB_NAME' => getenv('DB_NAME') ?: 'app_db',
+    'DB_USER' => getenv('DB_USER') ?: 'root',
+    'DB_PASSWORD' => getenv('DB_PASSWORD') ?: 'secret',
 );
 
 // Initialize the Kernel with configuration
