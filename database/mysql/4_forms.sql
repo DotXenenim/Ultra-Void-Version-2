@@ -1,0 +1,5 @@
+CREATE TABLE forms (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id      INTEGER NOT NULL UNIQUE,
+    submitted_at TEXT DEFAULT CURRENT_TIMESTAMP
+);

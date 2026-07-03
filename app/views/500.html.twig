@@ -1,0 +1,12 @@
+{% extends 'partials/base.html.twig' %}
+{% block title %}500 — Server error{% endblock %}
+{% block content %}
+<div class="min-h-screen flex items-center justify-center text-center px-4">
+    <div>
+        <p class="text-8xl font-extrabold text-navy opacity-10">500</p>
+        <h1 class="text-2xl font-bold text-navy mt-4 mb-2">Something went wrong</h1>
+        <p class="text-slate-card mb-8">An unexpected error occurred. Please try again.</p>
+        <a href="/" class="bg-crimson hover:bg-crimson-dark text-white font-bold px-8 py-3 rounded-xl transition-colors">Go home</a>
+    </div>
+</div>
+{% endblock %}

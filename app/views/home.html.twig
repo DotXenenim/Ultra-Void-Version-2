@@ -1,0 +1,106 @@
+{% extends 'partials/base.html.twig' %}
+{% block title %}dontgetdeported.nl — Your first 30 days in the Netherlands{% endblock %}
+
+{% block content %}
+{# Hero #}
+<section class="bg-navy text-white py-20 px-4">
+    <div class="max-w-3xl mx-auto text-center">
+        <div class="inline-block bg-crimson text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest mb-6">
+            For international students
+        </div>
+        <h1 class="text-4xl sm:text-5xl font-extrabold leading-tight mb-6">
+            Your first 30 days<br>
+            <span class="text-crimson">in the Netherlands,</span><br>
+            made simple.
+        </h1>
+        <p class="text-slate-card text-lg leading-relaxed mb-10 max-w-xl mx-auto">
+            Moving to the Netherlands means navigating a long list of official steps —
+            in Dutch, in the right order, with dependencies nobody tells you about.
+            We turn all of that into one clear, personalised checklist.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/register"
+               class="bg-crimson hover:bg-crimson-dark text-white font-bold px-8 py-4 rounded-xl text-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                Get started — it's free
+            </a>
+            <a href="/login"
+               class="border border-slate-card text-slate-card hover:text-white hover:border-white font-semibold px-8 py-4 rounded-xl text-lg transition-colors">
+                Already have an account
+            </a>
+        </div>
+    </div>
+</section>
+
+{# How it works #}
+<section class="py-16 px-4">
+    <div class="max-w-4xl mx-auto">
+        <h2 class="text-2xl font-bold text-navy text-center mb-12">How it works</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+            <div class="text-center">
+                <div class="w-14 h-14 bg-navy rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-white font-bold text-xl">1</span>
+                </div>
+                <h3 class="font-semibold text-navy mb-2">Answer a few questions</h3>
+                <p class="text-slate-card text-sm leading-relaxed">
+                    EU or non-EU? Working? Living in private rental?
+                    We use your answers to filter out steps that don't apply to you.
+                </p>
+            </div>
+            <div class="text-center">
+                <div class="w-14 h-14 bg-crimson rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-white font-bold text-xl">2</span>
+                </div>
+                <h3 class="font-semibold text-navy mb-2">Get your personal checklist</h3>
+                <p class="text-slate-card text-sm leading-relaxed">
+                    A clear, ordered list of exactly the steps you need to take —
+                    with official links, plain-language explanations, and the right order.
+                </p>
+            </div>
+            <div class="text-center">
+                <div class="w-14 h-14 bg-navy rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-white font-bold text-xl">3</span>
+                </div>
+                <h3 class="font-semibold text-navy mb-2">Tick things off as you go</h3>
+                <p class="text-slate-card text-sm leading-relaxed">
+                    Your progress is saved every time you check something off.
+                    Come back anytime — your checklist is waiting.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# Important steps preview #}
+<section class="bg-white py-16 px-4">
+    <div class="max-w-3xl mx-auto">
+        <h2 class="text-2xl font-bold text-navy text-center mb-3">What's on your checklist?</h2>
+        <p class="text-slate-card text-center mb-10 text-sm">
+            Steps vary by your situation — but here's what most students need.
+        </p>
+        <div class="space-y-3">
+            {% set previews = [
+                {icon: '🏛️', label: 'Register at the gemeente and get your BSN', tag: 'Everyone'},
+                {icon: '📱', label: 'Create a DigiD account', tag: 'Everyone'},
+                {icon: '🏦', label: 'Open a Dutch bank account', tag: 'Everyone'},
+                {icon: '💊', label: 'Arrange health insurance', tag: 'Conditional'},
+                {icon: '🚂', label: 'Get your student OV card', tag: 'EU · under 30'},
+                {icon: '📋', label: 'Residence permit (MVV + VVR)', tag: 'Non-EU only'},
+            ] %}
+            {% for item in previews %}
+            <div class="flex items-center gap-4 p-4 rounded-xl border border-slate-border bg-slate-bg">
+                <span class="text-2xl">{{ item.icon }}</span>
+                <span class="flex-1 text-navy font-medium text-sm">{{ item.label }}</span>
+                <span class="text-xs text-slate-card bg-white border border-slate-border px-2 py-1 rounded-full whitespace-nowrap">
+                    {{ item.tag }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-8">
+            <a href="/register" class="bg-crimson hover:bg-crimson-dark text-white font-bold px-8 py-3 rounded-xl transition-colors">
+                Build my personal checklist
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

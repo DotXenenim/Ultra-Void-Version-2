@@ -1,0 +1,281 @@
+{% extends 'partials/base.html.twig' %}
+{% block title %}My Checklist — dontgetdeported.nl{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+
+    {# Header #}
+    <div class="mb-8">
+        <h1 class="text-2xl font-extrabold text-navy">Welcome, {{ user.first_name }}</h1>
+        <p class="text-slate-card text-sm mt-1">Your personalised onboarding checklist</p>
+    </div>
+
+    {# Progress overview #}
+    <div class="bg-navy rounded-2xl p-6 mb-8 flex flex-col sm:flex-row items-center gap-6">
+        {# Ring progress #}
+        <div class="relative flex-shrink-0">
+            <svg width="100" height="100" class="transform -rotate-90">
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#243560" stroke-width="8"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#C0392B" stroke-width="8"
+                        stroke-dasharray="{{ (percent / 100 * 251.2)|round(1) }} 251.2"
+                        stroke-linecap="round"
+                        id="progressRing"/>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span class="text-white font-bold text-2xl" id="percentDisplay">{{ percent }}%</span>
+            </div>
+        </div>
+
+        <div class="text-center sm:text-left">
+            <p class="text-white font-bold text-xl">{{ done }} of {{ total }} steps complete</p>
+            <p class="text-slate-card text-sm mt-1">
+                {% if percent == 100 %}
+                    You're all set! Welcome to the Netherlands.
+                {% elseif percent >= 50 %}
+                    Great progress — you're more than halfway there.
+                {% elseif done == 0 %}
+                    Let's get started. Click your first step below.
+                {% else %}
+                    Keep going — every step counts.
+                {% endif %}
+            </p>
+        </div>
+
+        {# Gamified step dots #}
+        <div class="flex-1 hidden sm:flex flex-wrap gap-2 justify-end">
+            {% for i, step in steps %}
+                <button onclick="selectStep({{ i }})"
+                        class="w-8 h-8 rounded-full text-xs font-bold transition-all
+                               {% if step.completed %}bg-crimson text-white{% elseif i == activeIndex %}bg-white text-navy{% else %}bg-navy-light text-slate-card border border-slate-card{% endif %}"
+                        title="{{ step.title }}">
+                    {% if step.completed %}✓{% else %}{{ i + 1 }}{% endif %}
+                </button>
+            {% endfor %}
+        </div>
+    </div>
+
+    {# Main layout: step list + step detail #}
+    <div class="flex flex-col lg:flex-row gap-6">
+
+        {# Left: Step list #}
+        <div class="lg:w-72 flex-shrink-0">
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div class="px-4 py-3 border-b border-slate-border">
+                    <p class="text-xs font-bold text-navy uppercase tracking-widest">Your steps</p>
+                </div>
+                <div class="divide-y divide-slate-border" id="stepList">
+                    {% for i, step in steps %}
+                        <button onclick="selectStep({{ i }})"
+                                id="step-btn-{{ i }}"
+                                class="w-full text-left px-4 py-3 flex items-center gap-3 transition-colors hover:bg-slate-bg
+                                       {% if i == activeIndex %}bg-slate-bg border-l-4 border-crimson{% endif %}">
+                            {# Completion circle #}
+                            <div class="flex-shrink-0 w-7 h-7 rounded-full border-2 flex items-center justify-center
+                                        {% if step.completed %}bg-crimson border-crimson{% else %}border-slate-card{% endif %}">
+                                {% if step.completed %}
+                                    <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                {% endif %}
+                            </div>
+                            <span class="text-sm {% if step.completed %}text-slate-card line-through{% elseif i == activeIndex %}text-navy font-semibold{% else %}text-navy{% endif %} leading-snug">
+                                {{ step.title }}
+                            </span>
+                        </button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        {# Right: Step detail #}
+        <div class="flex-1">
+            {% for i, step in steps %}
+                <div id="step-detail-{{ i }}"
+                     class="bg-white rounded-2xl shadow-sm overflow-hidden {% if i != activeIndex %}hidden{% endif %}">
+
+                    {# Red top bar #}
+                    <div class="h-1.5 {% if step.completed %}bg-crimson{% else %}bg-navy{% endif %}"></div>
+
+                    <div class="p-6 sm:p-8">
+                        <div class="flex items-start justify-between gap-4 mb-4">
+                            <div>
+                                <span class="text-xs font-bold text-slate-card uppercase tracking-widest mb-1 block">
+                                    Step {{ i + 1 }} of {{ total }}
+                                </span>
+                                <h2 class="text-xl font-extrabold text-navy leading-tight">{{ step.title }}</h2>
+                            </div>
+                            {# Tick button #}
+                            <button onclick="toggleStep({{ step.form_step_id }}, {{ step.completed ? 0 : 1 }}, {{ i }})"
+                                    id="tick-btn-{{ i }}"
+                                    class="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm transition-all
+                                           {% if step.completed %}bg-crimson text-white hover:bg-crimson-dark{% else %}bg-slate-bg border-2 border-slate-border text-navy hover:border-navy{% endif %}">
+                                {% if step.completed %}
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                    Done
+                                {% else %}
+                                    Mark as done
+                                {% endif %}
+                            </button>
+                        </div>
+
+                        {# Description #}
+                        <p class="text-slate-card leading-relaxed mb-6">{{ step.description }}</p>
+
+                        {# Detail (collapsible) #}
+                        {% if step.detail %}
+                            <details class="mb-6 group">
+                                <summary class="cursor-pointer text-navy font-semibold text-sm flex items-center gap-2 select-none">
+                                    <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                    More details
+                                </summary>
+                                <p class="mt-3 text-slate-card text-sm leading-relaxed pl-6">{{ step.detail }}</p>
+                            </details>
+                        {% endif %}
+
+                        {# Optional suggestion box #}
+                        {% if step.optional_suggestion %}
+                            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex gap-3">
+                                <span class="text-amber-500 text-lg flex-shrink-0">💡</span>
+                                <div>
+                                    <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">Worth considering</p>
+                                    <p class="text-amber-800 text-sm leading-relaxed">{{ step.optional_suggestion }}</p>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {# Official link #}
+                        {% if step.official_url %}
+                            <a href="{{ step.official_url }}" target="_blank" rel="noopener noreferrer"
+                               class="inline-flex items-center gap-2 bg-navy hover:bg-navy-dark text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm">
+                                {{ step.official_url_label ?? 'Visit official page' }}
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                </svg>
+                            </a>
+                        {% endif %}
+                    </div>
+
+                    {# Prev / Next navigation #}
+                    <div class="px-6 sm:px-8 py-4 border-t border-slate-border flex justify-between">
+                        {% if i > 0 %}
+                            <button onclick="selectStep({{ i - 1 }})"
+                                    class="text-slate-card hover:text-navy text-sm font-medium transition-colors">
+                                &larr; Previous
+                            </button>
+                        {% else %}
+                            <span></span>
+                        {% endif %}
+                        {% if i < total - 1 %}
+                            <button onclick="selectStep({{ i + 1 }})"
+                                    class="text-navy font-semibold text-sm hover:text-crimson transition-colors">
+                                Next &rarr;
+                            </button>
+                        {% else %}
+                            <span class="text-slate-card text-sm">Last step</span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentStep = {{ activeIndex }};
+let total = {{ total }};
+let done = {{ done }};
+const circumference = 251.2;
+
+function selectStep(index) {
+    // Hide all details
+    document.querySelectorAll('[id^="step-detail-"]').forEach(el => el.classList.add('hidden'));
+    // Remove active from all buttons
+    document.querySelectorAll('[id^="step-btn-"]').forEach((btn, i) => {
+        btn.classList.remove('bg-slate-bg', 'border-l-4', 'border-crimson');
+    });
+
+    // Show selected
+    const detail = document.getElementById('step-detail-' + index);
+    const btn = document.getElementById('step-btn-' + index);
+    if (detail) detail.classList.remove('hidden');
+    if (btn) {
+        btn.classList.add('bg-slate-bg', 'border-l-4', 'border-crimson');
+    }
+    currentStep = index;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleStep(formStepId, completed, index) {
+    fetch('/checklist/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'csrf_token=' + encodeURIComponent(document.querySelector('input[name="csrf_token"]')?.value ?? '')
+            + '&form_step_id=' + formStepId
+            + '&completed=' + completed
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) return;
+
+        done = data.done;
+        total = data.total;
+        const pct = data.percent;
+
+        // Update ring
+        const ring = document.getElementById('progressRing');
+        if (ring) {
+            ring.setAttribute('stroke-dasharray', ((pct / 100) * circumference).toFixed(1) + ' ' + circumference);
+        }
+        document.getElementById('percentDisplay').textContent = pct + '%';
+
+        // Update tick button
+        const tickBtn = document.getElementById('tick-btn-' + index);
+        const stepBtn = document.getElementById('step-btn-' + index);
+        const bar = document.getElementById('step-detail-' + index)?.querySelector('.h-1\\.5');
+
+        if (completed == 1) {
+            // Mark as done
+            if (tickBtn) {
+                tickBtn.innerHTML = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> Done';
+                tickBtn.className = tickBtn.className.replace('bg-slate-bg border-2 border-slate-border text-navy hover:border-navy', 'bg-crimson text-white hover:bg-crimson-dark');
+                tickBtn.setAttribute('onclick', 'toggleStep(' + formStepId + ', 0, ' + index + ')');
+            }
+            if (stepBtn) {
+                const span = stepBtn.querySelector('span');
+                if (span) span.classList.add('line-through', 'text-slate-card');
+                const circle = stepBtn.querySelector('div');
+                if (circle) {
+                    circle.classList.add('bg-crimson', 'border-crimson');
+                    circle.innerHTML = '<svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>';
+                }
+            }
+            if (bar) bar.classList.replace('bg-navy', 'bg-crimson');
+            // Auto-advance to next uncompleted step
+            if (index < total - 1) setTimeout(() => selectStep(index + 1), 600);
+        } else {
+            // Unmark
+            if (tickBtn) {
+                tickBtn.innerHTML = 'Mark as done';
+                tickBtn.className = tickBtn.className.replace('bg-crimson text-white hover:bg-crimson-dark', 'bg-slate-bg border-2 border-slate-border text-navy hover:border-navy');
+                tickBtn.setAttribute('onclick', 'toggleStep(' + formStepId + ', 1, ' + index + ')');
+            }
+            if (stepBtn) {
+                const span = stepBtn.querySelector('span');
+                if (span) span.classList.remove('line-through', 'text-slate-card');
+                const circle = stepBtn.querySelector('div');
+                if (circle) {
+                    circle.classList.remove('bg-crimson', 'border-crimson');
+                    circle.innerHTML = '';
+                }
+            }
+            if (bar) bar.classList.replace('bg-crimson', 'bg-navy');
+        }
+    });
+}
+</script>
+{% endblock %}

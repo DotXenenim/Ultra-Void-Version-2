@@ -1,0 +1,56 @@
+{% extends 'partials/base.html.twig' %}
+{% block title %}Log in — dontgetdeported.nl{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-navy">Welcome back</h1>
+            <p class="text-slate-card mt-2 text-sm">Log in to continue with your checklist.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg p-8">
+            {% if errors.general is defined %}
+                <div class="bg-crimson bg-opacity-10 border border-crimson text-crimson text-sm rounded-lg px-4 py-3 mb-6">
+                    {{ errors.general }}
+                </div>
+            {% endif %}
+
+            <form method="POST" action="/login" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-navy uppercase tracking-wide mb-1" for="email">Email address</label>
+                    <input type="email" id="email" name="email"
+                           value="{{ email ?? '' }}"
+                           class="w-full border {% if errors.email is defined %}border-crimson{% else %}border-slate-border{% endif %} rounded-lg px-4 py-3 text-navy text-sm focus:outline-none focus:ring-2 focus:ring-navy"
+                           required autofocus>
+                    {% if errors.email is defined %}
+                        <p class="text-crimson text-xs mt-1">{{ errors.email }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-xs font-semibold text-navy uppercase tracking-wide mb-1" for="password">Password</label>
+                    <input type="password" id="password" name="password"
+                           class="w-full border {% if errors.password is defined %}border-crimson{% else %}border-slate-border{% endif %} rounded-lg px-4 py-3 text-navy text-sm focus:outline-none focus:ring-2 focus:ring-navy"
+                           required>
+                    {% if errors.password is defined %}
+                        <p class="text-crimson text-xs mt-1">{{ errors.password }}</p>
+                    {% endif %}
+                </div>
+
+                <button type="submit"
+                        class="w-full bg-navy hover:bg-navy-dark text-white font-bold py-3 rounded-xl transition-colors text-sm">
+                    Log in
+                </button>
+            </form>
+
+            <p class="text-center text-slate-card text-sm mt-6">
+                No account yet?
+                <a href="/register" class="text-crimson font-semibold hover:underline">Get started</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

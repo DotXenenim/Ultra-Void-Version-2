@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS form_steps;
+DROP TABLE IF EXISTS step_dependencies;
+DROP TABLE IF EXISTS forms;
+DROP TABLE IF EXISTS steps;
+DROP TABLE IF EXISTS users;

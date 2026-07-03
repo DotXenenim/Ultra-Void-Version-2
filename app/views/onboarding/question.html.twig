@@ -1,0 +1,240 @@
+{% extends 'partials/base.html.twig' %}
+{% block title %}Getting to know you — dontgetdeported.nl{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex flex-col items-center justify-center px-4 py-12">
+
+    {# Gamified progress bar at top #}
+    <div class="w-full max-w-lg mb-8">
+        <div class="flex items-center gap-2 mb-2">
+            {% for i in 1..totalSteps %}
+                <button
+                    onclick="goToStep({{ i }})"
+                    class="flex-1 h-2 rounded-full transition-all duration-300 {% if i < step %}bg-crimson cursor-pointer{% elseif i == step %}bg-navy{% else %}bg-slate-border cursor-not-allowed{% endif %}"
+                    {% if i > step %}disabled{% endif %}
+                    title="Step {{ i }}"
+                ></button>
+            {% endfor %}
+        </div>
+        <p class="text-slate-card text-xs text-right">Step {{ step }} of {{ totalSteps }}</p>
+    </div>
+
+    {# Question card #}
+    <div class="w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden">
+
+        {# Red top bar #}
+        <div class="h-1.5 bg-crimson"></div>
+
+        <div class="p-8">
+            <form method="POST" action="/onboarding" id="questionForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="current_step" value="{{ step }}">
+
+                {# ── QUESTION 1: Date of birth ── #}
+                {% if question == 'date_of_birth' %}
+                    <h2 class="text-xl font-bold text-navy mb-2">When is your date of birth?</h2>
+                    <p class="text-slate-card text-sm mb-6">This helps us check eligibility for things like student finance and housing allowance.</p>
+                    <input type="date" name="date_of_birth"
+                           value="{{ user.date_of_birth ?? '' }}"
+                           max="{{ 'now'|date('Y-m-d') }}"
+                           class="w-full border border-slate-border rounded-xl px-4 py-4 text-navy text-base focus:outline-none focus:ring-2 focus:ring-navy"
+                           required>
+
+                {# ── QUESTION 2: EU status ── #}
+                {% elseif question == 'eu_status' %}
+                    <h2 class="text-xl font-bold text-navy mb-2">Are you an EU/EEA citizen?</h2>
+                    <p class="text-slate-card text-sm mb-6">This determines whether you need a residence permit and IND registration.</p>
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-navy transition-colors {% if user.is_eu == true %}border-navy bg-slate-bg{% else %}border-slate-border{% endif %}">
+                            <input type="radio" name="is_eu" value="eu" class="accent-navy w-5 h-5" {% if user.is_eu == true %}checked{% endif %} required>
+                            <div>
+                                <span class="font-semibold text-navy block">EU / EEA citizen</span>
+                                <span class="text-slate-card text-xs">Includes all EU countries, Norway, Iceland, Liechtenstein, Switzerland</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-navy transition-colors {% if user.is_eu == false %}border-navy bg-slate-bg{% else %}border-slate-border{% endif %}">
+                            <input type="radio" name="is_eu" value="non_eu" class="accent-navy w-5 h-5" {% if user.is_eu == false %}checked{% endif %}>
+                            <div>
+                                <span class="font-semibold text-navy block">Non-EU student</span>
+                                <span class="text-slate-card text-xs">From outside the EU/EEA — you'll likely need a residence permit</span>
+                            </div>
+                        </label>
+                    </div>
+
+                {# ── QUESTION 3: Programme type ── #}
+                {% elseif question == 'program_type' %}
+                    <h2 class="text-xl font-bold text-navy mb-2">What type of programme are you enrolled in?</h2>
+                    <p class="text-slate-card text-sm mb-6">This affects eligibility for student finance and the OV card.</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        {% set programmes = [
+                            {value: 'bachelor', label: "Bachelor's"},
+                            {value: 'master',   label: "Master's"},
+                            {value: 'exchange', label: 'Exchange'},
+                            {value: 'minor',    label: 'Minor'},
+                            {value: 'phd',      label: 'PhD'},
+                            {value: 'other',    label: 'Other'},
+                        ] %}
+                        {% for prog in programmes %}
+                            <label class="flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer hover:border-navy transition-colors {% if user.program_type == prog.value %}border-navy bg-slate-bg{% else %}border-slate-border{% endif %}">
+                                <input type="radio" name="program_type" value="{{ prog.value }}" class="accent-navy w-4 h-4" {% if user.program_type == prog.value %}checked{% endif %} required>
+                                <span class="font-medium text-navy text-sm">{{ prog.label }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+
+                {# ── QUESTION 4: University admission ── #}
+                {% elseif question == 'has_admission' %}
+                    <h2 class="text-xl font-bold text-navy mb-2">Have you received admission confirmation from your university?</h2>
+                    <p class="text-slate-card text-sm mb-6">You need this to apply for a residence permit (Non-EU) and to enrol in DUO.</p>
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-navy transition-colors {% if user.has_admission == true %}border-navy bg-slate-bg{% else %}border-slate-border{% endif %}">
+                            <input type="radio" name="has_admission" value="yes" class="accent-navy w-5 h-5" {% if user.has_admission == true %}checked{% endif %} required>
+                            <span class="font-semibold text-navy">Yes, I have my admission letter</span>
+                        </label>
+                        <label class="flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-navy transition-colors {% if user.has_admission == false %}border-navy bg-slate-bg{% else %}border-slate-border{% endif %}">
+                            <input type="radio" name="has_admission" value="no" class="accent-navy w-5 h-5" {% if user.has_admission == false %}checked{% endif %}>
+                            <span class="font-semibold text-navy">Not yet</span>
+                        </label>
+                    </div>
+
+                {# ── QUESTION 5: Accommodation ── #}
+                {% elseif question == 'accommodation' %}
+                    <h2 class="text-xl font-bold text-navy mb-2">Do you already have accommodation?</h2>
+                    <p class="text-slate-card text-sm mb-6">This affects eligibility for housing allowance (Huurtoeslag) and municipality registration.</p>
+                    <div class="space-y-3" id="accomOptions">
+                        <label class="flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-navy transition-colors border-slate-border" id="accom-yes-label">
+                            <input type="radio" name="has_accommodation" value="yes" id="accom-yes" class="accent-navy w-5 h-5">
+                            <span class="font-semibold text-navy">Yes, I have accommodation</span>
+                        </label>
+                        <label class="flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-navy transition-colors border-slate-border">
+                            <input type="radio" name="has_accommodation" value="no" class="accent-navy w-5 h-5">
+                            <span class="font-semibold text-navy">Not yet</span>
+                        </label>
+                    </div>
+                    <div id="housingTypeSection" class="hidden mt-4 space-y-2">
+                        <p class="text-sm font-semibold text-navy mb-2">What type of accommodation?</p>
+                        {% set housing = [
+                            {value: 'student_housing', label: 'Student housing (via university/housing corp)'},
+                            {value: 'private_rental',  label: 'Private rental'},
+                            {value: 'family_friends',  label: 'Living with family or friends'},
+                            {value: 'other',           label: 'Other'},
+                        ] %}
+                        {% for h in housing %}
+                            <label class="flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer hover:border-navy transition-colors border-slate-border">
+                                <input type="radio" name="housing_type" value="{{ h.value }}" class="accent-navy w-4 h-4">
+                                <span class="text-navy text-sm font-medium">{{ h.label }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+
+                {# ── QUESTION 6: Employment ── #}
+                {% elseif question == 'employment' %}
+                    <h2 class="text-xl font-bold text-navy mb-2">Will you be working part-time alongside your studies?</h2>
+                    <p class="text-slate-card text-sm mb-6">This affects whether Dutch health insurance is legally required and tax return obligations.</p>
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-navy transition-colors {% if user.is_working == true %}border-navy bg-slate-bg{% else %}border-slate-border{% endif %}">
+                            <input type="radio" name="is_working" value="yes" class="accent-navy w-5 h-5" {% if user.is_working == true %}checked{% endif %} required>
+                            <div>
+                                <span class="font-semibold text-navy block">Yes</span>
+                                <span class="text-xs text-slate-card">Dutch health insurance becomes mandatory</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-navy transition-colors {% if user.is_working == false %}border-navy bg-slate-bg{% else %}border-slate-border{% endif %}">
+                            <input type="radio" name="is_working" value="no" class="accent-navy w-5 h-5" {% if user.is_working == false %}checked{% endif %}>
+                            <span class="font-semibold text-navy">No</span>
+                        </label>
+                        <label class="flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-navy transition-colors border-slate-border">
+                            <input type="radio" name="is_working" value="maybe" class="accent-navy w-5 h-5">
+                            <div>
+                                <span class="font-semibold text-navy block">Not sure yet</span>
+                                <span class="text-xs text-slate-card">We'll include the relevant steps with a note</span>
+                            </div>
+                        </label>
+                    </div>
+
+                {# ── QUESTION 7: Already have ── #}
+                {% elseif question == 'already_have' %}
+                    <h2 class="text-xl font-bold text-navy mb-2">Which of these do you already have?</h2>
+                    <p class="text-slate-card text-sm mb-6">Select everything you've already sorted — we'll remove these from your checklist.</p>
+                    <div class="space-y-2">
+                        {% set items = [
+                            {value: 'bsn',              label: 'BSN (citizen service number)'},
+                            {value: 'digid',            label: 'DigiD account'},
+                            {value: 'bank-account',     label: 'Dutch bank account'},
+                            {value: 'health-insurance', label: 'Dutch health insurance'},
+                            {value: 'gp',               label: 'GP (general practitioner)'},
+                            {value: 'ov-card',          label: 'Student OV card'},
+                            {value: 'huurtoeslag',      label: 'Housing allowance (Huurtoeslag)'},
+                        ] %}
+                        {% if user.is_eu == false %}
+                            {% set items = items|merge([{value: 'residence-permit', label: 'Residence permit (MVV/VVR)'}]) %}
+                        {% endif %}
+                        {% for item in items %}
+                            <label class="flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer hover:border-navy transition-colors border-slate-border">
+                                <input type="checkbox" name="already_have[]" value="{{ item.value }}" class="accent-crimson w-4 h-4 rounded">
+                                <span class="text-navy text-sm font-medium">{{ item.label }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+
+                {% endif %}
+
+                {# Navigation buttons #}
+                <div class="flex justify-between items-center mt-8">
+                    {% if step > 1 %}
+                        <a href="/onboarding?step={{ step - 1 }}"
+                           class="text-slate-card hover:text-navy text-sm font-medium transition-colors">
+                            &larr; Back
+                        </a>
+                    {% else %}
+                        <span></span>
+                    {% endif %}
+
+                    <button type="submit"
+                            class="bg-crimson hover:bg-crimson-dark text-white font-bold px-8 py-3 rounded-xl transition-colors text-sm">
+                        {% if step == totalSteps %}
+                            Build my checklist &rarr;
+                        {% else %}
+                            Next &rarr;
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function goToStep(n) {
+    window.location.href = '/onboarding?step=' + n;
+}
+
+// Show housing type sub-options when "Yes" is selected for accommodation
+const accomYes = document.getElementById('accom-yes');
+const housingSection = document.getElementById('housingTypeSection');
+if (accomYes && housingSection) {
+    document.querySelectorAll('input[name="has_accommodation"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            housingSection.classList.toggle('hidden', this.value !== 'yes');
+        });
+    });
+}
+
+// Highlight selected radio labels
+document.querySelectorAll('input[type="radio"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const name = this.name;
+        document.querySelectorAll('input[name="' + name + '"]').forEach(r => {
+            const label = r.closest('label');
+            if (label) {
+                label.classList.toggle('border-navy', r.checked);
+                label.classList.toggle('bg-slate-bg', r.checked);
+                label.classList.toggle('border-slate-border', !r.checked);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
