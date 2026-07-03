@@ -9,19 +9,27 @@ class Database
 {
     private PDO $connection;
 
-    public function __construct(
-        string $host,
-        string $dbname,
-        string $username,
-        string $password,
-        string $port = '3306',
-        string $charset = 'utf8mb4'
-    ) {
-        $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset={$charset}";
+    public function __construct(string $name)
+    {
+        $host     = getenv('DB_HOST') ?: null;
+        $port     = getenv('DB_PORT') ?: '3306';
+        $dbName   = getenv('DB_DATABASE') ?: null;
+        $username = getenv('DB_USERNAME') ?: null;
+        $password = getenv('DB_PASSWORD') ?: null;
 
-        $this->connection = new PDO($dsn, $username, $password);
-        $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $this->connection->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ);
+        if ($host && $dbName && $username) {
+            // Step 3: MySQL — environment variables set by docker-compose.mysql.yml
+            $dsn = "mysql:host={$host};port={$port};dbname={$dbName};charset=utf8mb4";
+            $this->connection = new PDO($dsn, $username, $password);
+            $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->connection->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ);
+        } else {
+            // Steps 1 & 2: SQLite
+            $this->connection = new PDO("sqlite:" . $name);
+            $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->connection->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ);
+            $this->connection->exec('PRAGMA foreign_keys = ON;');
+        }
     }
 
     public function query(string $query): PDOStatement | false
@@ -62,7 +70,6 @@ class Database
         if ($files === false) {
             die('Could not read database migration files');
         }
-        sort($files, SORT_NATURAL);
         foreach ($files as $file) {
             if ($file === '.' || $file === '..') {
                 continue;

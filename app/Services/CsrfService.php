@@ -2,10 +2,8 @@
 
 namespace App\Services;
 
-use Exception;
 use Framework\ResponseFactory;
 use Framework\Session;
-use Random\RandomException;
 
 class CsrfService
 {
@@ -17,7 +15,7 @@ class CsrfService
     {
         $responseFactory->addFunction('csrf_token', function () {
             if (!$this->session) {
-                throw new Exception('Session not set in CsrfService');
+                throw new \Exception('Session not set in CsrfService');
             }
             $token = $this->getToken($this->session);
             return htmlspecialchars($token, ENT_QUOTES, 'UTF-8');
@@ -25,11 +23,11 @@ class CsrfService
 
         $responseFactory->addStringFunction('csrf_input', function () {
             if (!$this->session) {
-                throw new Exception('Session not set in CsrfService');
+                throw new \Exception('Session not set in CsrfService');
             }
             $token = $this->getToken($this->session);
-            return '<input type="hidden" name="csrf_token" value="' .
-                htmlspecialchars($token, ENT_QUOTES, 'UTF-8') . '">';
+            return '<input type="hidden" name="csrf_token" value="'
+                . htmlspecialchars($token, ENT_QUOTES, 'UTF-8') . '">';
         });
     }
 
@@ -38,13 +36,10 @@ class CsrfService
         $this->session = $session;
     }
 
-    /**
-     * @throws Exception
-     */
     public function validateToken(string $formToken): bool
     {
         if (!$this->session) {
-            throw new Exception('Session not set in CsrfService');
+            throw new \Exception('Session not set in CsrfService');
         }
         $sessionToken = $this->session->get(self::TOKEN_KEY);
         if (!is_string($sessionToken)) {
@@ -54,9 +49,6 @@ class CsrfService
         return hash_equals($sessionToken, $formToken);
     }
 
-    /**
-     * @throws RandomException
-     */
     public function getToken(Session $session): string
     {
         $sessionToken = $session->get(self::TOKEN_KEY);

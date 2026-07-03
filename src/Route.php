@@ -38,9 +38,8 @@ class Route
         return false;
     }
 
-    public function addMiddleware(callable $middleware): static
+    public function addMiddleware(callable $middleware): void
     {
         $this->middleware[] = $middleware;
-        return $this;
     }
 }

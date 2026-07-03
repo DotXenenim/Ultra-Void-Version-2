@@ -1,61 +1,55 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\User;
-use App\Repositories\AdminRepository;
-use Framework\Request;
+use App\Repositories\UserRepository;
 use Framework\Session;
 
 class AuthService
 {
-    private AdminRepository $adminRepository;
+    private UserRepository $userRepository;
 
-    public function __construct(AdminRepository $userRepository)
+    public function __construct(UserRepository $userRepository)
     {
-        $this->adminRepository = $userRepository;
+        $this->userRepository = $userRepository;
     }
 
-    public function register(User $user, ?string $password): User
+    public function register(User $user, string $password): User
     {
-        if ($password == null) {
-            $user->password = null;
-        } else {
-            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-            $user->password = $passwordHash;
+        $user->password = password_hash($password, PASSWORD_DEFAULT);
+        return $this->userRepository->insert($user);
+    }
+
+    public function loginWithCredentials(string $email, string $password, Session $session): User|false
+    {
+        $user = $this->userRepository->findByEmail($email);
+        if (!$user) {
+            return false;
         }
-        $this->adminRepository->insertUser($user);
+        if (!password_verify($password, $user->password)) {
+            return false;
+        }
+        $session->destroy();
+        $session->set('user_id', $user->id);
         return $user;
     }
 
-    public function login(string $username, string $password): ?User
+    public function forceLogin(User $user, Session $session): void
     {
-        $userRepo = $this->adminRepository->getUserByUsername($username);
-        if ($userRepo === null) {
-            return null;
-        }
-        $password_hash = $userRepo->password;
-        return password_verify($password, $password_hash) ? $userRepo : null;
-    }
-    public function validateUser(?object $user, string $requiredRole): bool
-    {
-        $role = $user->role ?? '';
-        if ($requiredRole == 'User' && $role !== 'Admin') {
-            return true;
-        }
-        return $role === $requiredRole;
-    }
-    public function checkCredentials(?object $user): bool
-    {
-        return $user !== null;
-    }
-    public function checkUsername($username): bool
-    {
-        return $this->adminRepository->getUserByUsername($username) !== null;
+        $session->destroy();
+        $session->set('user_id', $user->id);
     }
 
-    public function isLeadAssignedToProject(User $user, int $projectId): bool{
-        $assignedUser = $this->adminRepository->getUserByAssignedProject($projectId);
-        return $assignedUser == $user;
+    public function validateUser(int $userId): ?User
+    {
+        return $this->userRepository->findById($userId);
+    }
+
+    public function logout(Session $session): void
+    {
+        $session->destroy();
     }
 }

@@ -10,9 +10,6 @@ class Response
 
     public ?string $header;
 
-    /** @var string[] */
-    public array $headers = [];
-
     public function __construct(string $body = "", int $responseCode = 200, ?string $header = null)
     {
         $this->body = $body;
@@ -25,9 +22,6 @@ class Response
      */
     public function echo(): void
     {
-        foreach ($this->headers as $headerLine) {
-            header($headerLine);
-        }
         if ($this->header !== null) {
             header($this->header);
         }

@@ -17,6 +17,9 @@ class Request
     /** @var string[] */
     public array $routeParameters = [];
 
+    /** @var array<string, mixed> */
+    public array $attributes = [];
+
     public Session $session;
 
     /**
@@ -51,6 +54,23 @@ class Request
         }
         if (array_key_exists($key, $this->queryParameters)) {
             return $this->queryParameters[$key];
+        }
+        return null;
+    }
+
+    public function setAttribute(string $key, mixed $value): void
+    {
+        $this->attributes[$key] = $value;
+    }
+
+    /**
+     * @param string $key
+     * @return mixed|null
+     */
+    public function getAttribute(string $key): mixed
+    {
+        if (array_key_exists($key, $this->attributes)) {
+            return $this->attributes[$key];
         }
         return null;
     }

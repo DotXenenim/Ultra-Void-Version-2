@@ -2,17 +2,16 @@
 
 namespace Framework;
 
-use Twig\Error\LoaderError;
-use Twig\Error\RuntimeError;
-use Twig\Error\SyntaxError;
-
 class ResponseFactory
 {
     private \Twig\Environment $twig;
 
+    /** @var array<string|int, mixed> */
+    public array $globalContext = [];
+
     public function __construct(bool $debugMode, string $viewsPath)
     {
-        $loader = new \Twig\Loader\FilesystemLoader($viewsPath);
+        $loader = new \Twig\Loader\FilesystemLoader(__DIR__ . '/../' . $viewsPath);
         $twig = new \Twig\Environment($loader, [
             'debug' => $debugMode
         ]);
@@ -20,6 +19,19 @@ class ResponseFactory
             $twig->addExtension(new \Twig\Extension\DebugExtension());
         }
         $this->twig = $twig;
+    }
+
+    public function addFunction(string $name, callable $function): void
+    {
+        $this->twig->addFunction(new \Twig\TwigFunction($name, $function));
+    }
+
+    public function addStringFunction(string $name, callable $function): void
+    {
+        $function = function () use ($function) {
+            return new \Twig\Markup($function(), 'UTF-8');
+        };
+        $this->twig->addFunction(new \Twig\TwigFunction($name, $function));
     }
 
     /**
@@ -33,7 +45,7 @@ class ResponseFactory
 
         try {
             $response->responseCode = 200;
-            $response->body = $this->twig->render($view, $context);
+            $response->body = $this->twig->render($view, array_merge($this->globalContext, $context));
             return $response;
         } catch (\Exception $e) {
             $response->responseCode = 500;
@@ -70,20 +82,7 @@ class ResponseFactory
         }
     }
 
-    public function forbidden(): Response
-    {
-        $response = new Response();
-        try {
-            $response->responseCode = 403;
-            $response->body = $this->twig->render('403.html.twig');
-            return $response;
-        } catch (\Exception $e) {
-            $response->responseCode = 500;
-            $response->body = $e->getMessage();
-            return $response;
-        }
-    }
-    public function unAuthorized(): Response
+    public function notAuthorized(): Response
     {
         $response = new Response();
         try {
@@ -97,18 +96,18 @@ class ResponseFactory
         }
     }
 
-    /**
-     * Takes a twig template, context for the twig template and returns an HTML string
-     * @param string $view file
-     * @param mixed[] $context context for variables in twig
-     * @return string HTML string
-     * @throws LoaderError
-     * @throws RuntimeError
-     * @throws SyntaxError
-     */
-    public function render(string $view, array $context): string
+    public function forbidden(): Response
     {
-        return $this->twig->render($view, $context);
+        $response = new Response();
+        try {
+            $response->responseCode = 403;
+            $response->body = $this->twig->render('403.html.twig');
+            return $response;
+        } catch (\Exception $e) {
+            $response->responseCode = 500;
+            $response->body = $e->getMessage();
+            return $response;
+        }
     }
 
     public function redirect(string $url): Response
@@ -118,11 +117,13 @@ class ResponseFactory
         $response->header = "Location: " . $url;
         return $response;
     }
+
+    /**@throws \JsonException*/
     public function json(mixed $data, int $statusCode = 200): Response
     {
         $response = new Response();
         $response->responseCode = $statusCode;
-        $response->body = json_encode($data) ? json_encode($data) : '';
+        $response->body = json_encode($data, JSON_THROW_ON_ERROR);
         $response->header = "Content-Type: application/json";
         return $response;
     }
